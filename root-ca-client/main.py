@@ -18,32 +18,38 @@ import argparse
 
 def main():
     parser = argparse.ArgumentParser(description='Utility for interacting with the MCP root CA service')
-    parser.add_argument('-c', '--create', nargs=1, metavar='PEM cert', help='Create a new Root CA. Takes the path of a PEM '
-                                                                            'certificate as argument')
-    parser.add_argument('-gr', '--get-root', dest='gr', nargs=1, metavar='root ID', help='Gets the root CA that has the specified ID')
-    parser.add_argument('-gar', '--get-all-roots', dest='gar', action='store_true', help='Gets either all root CAs, or if'
-                                                                                           ' a list of attestor IDs is '
-                                                                                           'given the list of root CAs that'
-                                                                                           ' are attested by the given '
-                                                                                           'attestors will be returned')
-    parser.add_argument('-atby', '--get-attested-by', dest='atby', nargs='+', metavar='attestor IDs', help='Get all root CAs that are attested by the given attestors')
-    parser.add_argument('-ca', '--create-attestor', dest='ca', nargs=1, metavar='PEM cert', help='Create a new attestor. Takes the '
-                                                                                      'path of a PEM certificate as '
-                                                                                      'argument')
-    parser.add_argument('-ga', '--get-attestor', dest='ga', nargs=1, metavar='attestor ID', help='Gets the attestor that has the '
-                                                                                      'specified ID')
-    parser.add_argument('-gaa', '--get-all-attestors', dest='gaa', action='store_true', help='Gets the list of all attestors')
-    parser.add_argument('-catt', '--create-attestation', dest='catt', nargs=4, metavar=('attestor-ID', 'root-CA-ID', 'signature-file', 'signature-algorithm-identifier'),
+    parser.add_argument('-c', '--create', nargs=1, metavar='PEM cert',
+                        help='Create a new Root CA. Takes the path of a PEM '
+                             'certificate as argument')
+    parser.add_argument('-gr', '--get-root', dest='gr', nargs=1, metavar='root ID',
+                        help='Gets the root CA that has the specified ID')
+    parser.add_argument('-gar', '--get-all-roots', dest='gar', action='store_true',
+                        help='Gets either all root CAs, or if a list of attestor IDs is given the list of root CAs that'
+                             ' are attested by the given attestors will be returned')
+    parser.add_argument('-atby', '--get-attested-by', dest='atby', nargs='+', metavar='attestor IDs',
+                        help='Get all root CAs that are attested by the given attestors')
+    parser.add_argument('-ca', '--create-attestor', dest='ca', nargs=1, metavar='PEM cert',
+                        help='Create a new attestor. Takes the path of a PEM certificate as argument')
+    parser.add_argument('-ga', '--get-attestor', dest='ga', nargs=1, metavar='attestor ID',
+                        help='Gets the attestor that has the specified ID')
+    parser.add_argument('-gaa', '--get-all-attestors', dest='gaa', action='store_true',
+                        help='Gets the list of all attestors')
+    parser.add_argument('-catt', '--create-attestation', dest='catt', nargs=4,
+                        metavar=('attestor-ID', 'root-CA-ID', 'signature-file', 'signature-algorithm-identifier'),
                         help='Create a new attestation')
-    parser.add_argument('-gat', '--get-attestation', dest='gat', nargs=1, metavar='attestation ID', help='Gets the attestation with '
-                                                                                             'the specified ID')
-    parser.add_argument('-gaat', '--get-all-attestations', dest='gaat', action='store_true', help='Get the list of all attestations')
-    parser.add_argument('-cre', '--create-revocation', nargs=5, metavar=('attestor-ID', 'root-CA-ID', 'attestation-id', 'signature-file', 'signature-algorithm-identifier'),
+    parser.add_argument('-gat', '--get-attestation', dest='gat', nargs=1, metavar='attestation ID',
+                        help='Gets the attestation with '
+                             'the specified ID')
+    parser.add_argument('-gaat', '--get-all-attestations', dest='gaat', action='store_true',
+                        help='Get the list of all attestations')
+    parser.add_argument('-cre', '--create-revocation', nargs=5, metavar=(
+    'attestor-ID', 'root-CA-ID', 'attestation-id', 'signature-file', 'signature-algorithm-identifier'),
                         help='Revokes an attestation')
-    parser.add_argument('-gre', '--get-revocation', nargs=1, metavar='revocation ID', help='Get the revocation with the '
-                                                                                           'specified ID')
+    parser.add_argument('-gre', '--get-revocation', nargs=1, metavar='revocation ID',
+                        help='Get the revocation with the specified ID')
     parser.add_argument('-gres', '--get-all-revocations', dest='gres', action='store_true', help='Gets all revocations')
-    parser.add_argument('-o', '--outfile', nargs=1, metavar='output file', help='Writes the output to the specified path')
+    parser.add_argument('-o', '--outfile', nargs=1, metavar='output file',
+                        help='Writes the output to the specified path')
     args = parser.parse_args()
     url = 'http://localhost:8080/api'
 
@@ -70,7 +76,8 @@ def main():
         pem_cert_path = args.ca[0]
         with open(pem_cert_path, "wb") as h:
             pem_cert = h.read()
-        r = requests.post(url + '/attestor', data=pem_cert, headers={'Content-Type': 'application/pem-certificate-chain'})
+        r = requests.post(url + '/attestor', data=pem_cert,
+                          headers={'Content-Type': 'application/pem-certificate-chain'})
         write_response(args, r)
     elif args.ga:
         att_id = args.ga[0]
@@ -106,7 +113,8 @@ def main():
         with open(sig_path, "rb") as h:
             sig = h.read()
         sig_hex = sig.hex()
-        data = {'attestorId': att_id, 'rootCAid': root_id, 'attestationId': attest_id, 'signature': sig_hex, 'algorithmIdentifier': sig_alg}
+        data = {'attestorId': att_id, 'rootCAid': root_id, 'attestationId': attest_id, 'signature': sig_hex,
+                'algorithmIdentifier': sig_alg}
         r = requests.post(url + '/revocation', json=data)
         write_response(args, r)
     elif args.gre:
