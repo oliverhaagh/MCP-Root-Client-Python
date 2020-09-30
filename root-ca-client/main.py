@@ -14,6 +14,8 @@
 
 import requests
 import argparse
+import binascii
+from OpenSSL import crypto
 
 
 def main():
@@ -42,10 +44,10 @@ def main():
                              'the specified ID')
     parser.add_argument('-gaat', '--get-all-attestations', dest='gaat', action='store_true',
                         help='Get the list of all attestations')
-    parser.add_argument('-cre', '--create-revocation', nargs=5, metavar=(
+    parser.add_argument('-cre', '--create-revocation', dest='cre', nargs=5, metavar=(
     'attestor-ID', 'root-CA-ID', 'attestation-id', 'signature-file', 'signature-algorithm-identifier'),
                         help='Revokes an attestation')
-    parser.add_argument('-gre', '--get-revocation', nargs=1, metavar='revocation ID',
+    parser.add_argument('-gre', '--get-revocation', dest='gre', nargs=1, metavar='revocation ID',
                         help='Get the revocation with the specified ID')
     parser.add_argument('-gres', '--get-all-revocations', dest='gres', action='store_true', help='Gets all revocations')
     parser.add_argument('-o', '--outfile', nargs=1, metavar='output file',
@@ -62,15 +64,18 @@ def main():
     elif args.gr:
         root_id = args.gr[0]
         r = requests.get(url + '/root/' + root_id)
+        verify_signatures([r.json()])
         write_response(args, r)
     elif args.gar:
         r = requests.get(url + '/roots')
+        verify_signatures(r.json())
         write_certs(args, r)
     elif args.atby:
         tmp = ['attestorId={}'.format(att_id) for att_id in args.atby]
         variables = '?' + '&'.join(tmp)
         tmp_url = f"{url}/roots{variables}"
         r = requests.get(tmp_url)
+        verify_signatures(r.json())
         write_certs(args, r)
     elif args.ca:
         pem_cert_path = args.ca[0]
@@ -148,6 +153,25 @@ def write_certs(args, r):
         print(cont)
     else:
         print(r.text)
+
+
+def verify_signatures(roots):
+    for root in roots:
+        root_cert = root['certificate']
+        root_cert_bytes = bytes(root_cert, 'UTF-8')
+        attestations = root['attestations']
+        for attestation in attestations:
+            attestor = attestation['attestor']
+            attestor_cert = attestor['certificate']
+            attestor_cert = crypto.load_certificate(crypto.FILETYPE_PEM, bytes(attestor_cert, 'UTF-8'))
+            sig = attestation['signature']
+            sig = binascii.unhexlify(sig)
+            sig_alg = str(attestation['algorithmIdentifier'])
+            digest = sig_alg.split('with')[0]
+            try:
+                crypto.verify(attestor_cert, sig, root_cert_bytes, digest)
+            except ValueError:
+                print(f"Attestation made by attestor '{attestor['name']}' on root CA '{root['name']}' is not valid")
 
 
 if __name__ == '__main__':
