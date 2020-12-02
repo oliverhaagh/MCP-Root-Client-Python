@@ -45,7 +45,7 @@ def main():
     parser.add_argument('-gaat', '--get-all-attestations', dest='gaat', action='store_true',
                         help='Get the list of all attestations')
     parser.add_argument('-cre', '--create-revocation', dest='cre', nargs=5, metavar=(
-    'attestor-ID', 'root-CA-ID', 'attestation-id', 'signature-file', 'signature-algorithm-identifier'),
+        'attestor-ID', 'root-CA-ID', 'attestation-id', 'signature-file', 'signature-algorithm-identifier'),
                         help='Revokes an attestation')
     parser.add_argument('-gre', '--get-revocation', dest='gre', nargs=1, metavar='revocation ID',
                         help='Get the revocation with the specified ID')
@@ -53,7 +53,7 @@ def main():
     parser.add_argument('-o', '--outfile', nargs=1, metavar='output file',
                         help='Writes the output to the specified path')
     args = parser.parse_args()
-    url = 'http://localhost:8080/api'
+    url = 'https://root-ca-list-demo.maritimeconnectivity.net/api'
 
     if args.create:
         pem_cert_path = args.create[0]
